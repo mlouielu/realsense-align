@@ -32,10 +32,9 @@ Run the test code by `poetry run pytest tests`.
 Porting
 -------
 
-[-] struct Intrinsic
-[-] Depth to color align
-[] Color to depth align
-
+* [x] struct Intrinsic
+* [x] Depth to color align
+* [ ] Color to depth align
 
 Trade-off
 ---------
@@ -46,12 +45,16 @@ for more information.
 
 1. Don't care extrinsic: Assume the following:
 
-```
+```en
 Rotation: [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
 Translation: [0, 0, 0]
 ```
 
-See [https://github.com/IntelRealSense/librealsense/blob/8ffb17b027e100c2a14fa21f01f97a1921ec1e1b/src/proc/align.cpp#L169](src/proc/align.cpp) for original implementation, and [https://intelrealsense.github.io/librealsense/doxygen/structrs2__extrinsics.html](rs2_extrinsics Struct Reference) for `rs2_extrinsics` structure.
+See
+[https://github.com/IntelRealSense/librealsense/blob/8ffb17b027e100c2a14fa21f01f97a1921ec1e1b/src/proc/align.cpp#L169](src/proc/align.cpp)
+for original implementation, and
+[https://intelrealsense.github.io/librealsense/doxygen/structrs2__extrinsics.html](rs2_extrinsics
+Struct Reference) for `rs2_extrinsics` structure.
 
 Links
 -----
