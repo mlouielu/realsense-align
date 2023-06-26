@@ -40,7 +40,7 @@ Trade-off
 ---------
 
 1. Don't care distortion: See
-[https://github.com/IntelRealSense/librealsense/issues/1430#issuecomment-375945916](librealsense#1430)
+[librealsense#1430](https://github.com/IntelRealSense/librealsense/issues/1430#issuecomment-375945916)
 for more information.
 
 1. Don't care extrinsic: Assume the following:
@@ -51,10 +51,10 @@ Translation: [0, 0, 0]
 ```
 
 See
-[https://github.com/IntelRealSense/librealsense/blob/8ffb17b027e100c2a14fa21f01f97a1921ec1e1b/src/proc/align.cpp#L169](src/proc/align.cpp)
-for original implementation, and
-[https://intelrealsense.github.io/librealsense/doxygen/structrs2__extrinsics.html](rs2_extrinsics
-Struct Reference) for `rs2_extrinsics` structure.
+[src/proc/align.cpp](https://github.com/IntelRealSense/librealsense/blob/8ffb17b027e100c2a14fa21f01f97a1921ec1e1b/src/proc/align.cpp#L169)
+for original implementation, and [rs2_extrinsicsStruct
+Reference](https://intelrealsense.github.io/librealsense/doxygen/structrs2__extrinsics.html)
+for `rs2_extrinsics` structure.
 
 Links
 -----
