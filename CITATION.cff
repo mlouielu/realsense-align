@@ -1,0 +1,20 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: realsense-align
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Shao-Jung (Louie)
+    family-names: Lu
+    email: louielu@cs.unc.edu
+repository-code: 'https://github.com/mlouielu/realsense-align'
+url: 'https://github.com/mlouielu/realsense-align'
+abstract: >-
+  realsense-align ported `librealsense` C++ align code to Python
+  C++ extension. Align depth and color image without `librealsense`
+  SDK and `rs:frame` infrastructure.
+license: BSD-3-Clause-Clear
