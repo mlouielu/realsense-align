@@ -5,7 +5,8 @@ realsense-align
 [![License: BSD 3-Clause-Clear](https://img.shields.io/badge/License-BSD%203--Clause--Clear-green.svg)](https://spdx.org/licenses/BSD-3-Clause-Clear.html)
 
 Porting `librealsense` C++ align code to Python C++ extension. Align
-depth and color image without `librealsense` SDK and `rs:frame` infrastructure.
+depth and color image from `numpy` array without `librealsense` SDK
+and `rs:frame` infrastructure.
 
 Prerequisites
 -------------

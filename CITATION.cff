@@ -15,6 +15,6 @@ repository-code: 'https://github.com/mlouielu/realsense-align'
 url: 'https://github.com/mlouielu/realsense-align'
 abstract: >-
   realsense-align ported `librealsense` C++ align code to Python
-  C++ extension. Align depth and color image without `librealsense`
-  SDK and `rs:frame` infrastructure.
+  C++ extension. Align depth and color image from `numpy` array
+  without `librealsense` SDK and `rs:frame` infrastructure.
 license: BSD-3-Clause-Clear
