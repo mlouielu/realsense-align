@@ -25,7 +25,7 @@ poetry build
 How to use
 ----------
 
-See [test/test_align.py](test/test_align.py) for detail.
+See [tests/test_align.py](tests/test_align.py) for detail.
 
 Run the test code by `poetry run pytest tests`.
 
