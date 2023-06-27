@@ -33,7 +33,7 @@
 //
 // Modifications: Extract necessary codes from `src/proc/align.cpp` and combine
 //                wrapped it with pybind11 to provide fast align from Python
-//                with librealsense SDK and the `rs::frame` infrastructure.//
+//                without librealsense SDK and the `rs::frame` infrastructure.
 //
 // License: Apache 2.0. See https://github.com/IntelRealSense/librealsense
 //          LICENSE file in root directory
