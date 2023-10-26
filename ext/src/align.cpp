@@ -162,8 +162,8 @@ py::array_t<uint16_t> align_z_to_other(py::array_t<int16_t> depth,
                                        const struct Intrinsics &color_intrin,
                                        double z_scale)
 {
-    // XXX: Fixed size!?
-    py::array_t<uint16_t> out_z_arr({ 1080, 1920 });
+    py::array_t<uint16_t> out_z_arr(
+        { color_intrin.height, color_intrin.width });
     py::buffer_info out_z_info = out_z_arr.request();
     py::buffer_info depth_info = depth.request();
     py::buffer_info color_info = color.request();
