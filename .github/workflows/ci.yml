@@ -20,10 +20,34 @@ jobs:
       - if: ${{ matrix.os == 'macos-latest' }}
         run:
           |
-            brew install llvm libomp
+            brew install llvm libomp gcc gfortran
+            export PATH="/usr/local/opt/llvm/bin:$PATH"
+            export LDFLAGS="-L/usr/local/opt/llvm/lib"
+            export CPPFLAGS="-I/usr/local/opt/llvm/include"
             export CC=/usr/local/opt/llvm/bin/clang
 
       - name: Setup
+        env:
+          |
+            XCBASE:=$(shell xcrun --show-sdk-path)
+            LLVMBASE:=$(shell brew --prefix llvm)
+            GCCBASE:=$(shell brew --prefix gcc)
+            GETTEXT:=$(shell brew --prefix gettext)
+
+            CC=$(LLVMBASE)/bin/clang -fopenmp
+            CXX=$(LLVMBASE)/bin/clang++ -fopenmp
+            CXX11=$(LLVMBASE)/bin/clang++ -fopenmp
+            CXX14=$(LLVMBASE)/bin/clang++ -fopenmp
+            CXX17=$(LLVMBASE)/bin/clang++ -fopenmp
+            CXX1X=$(LLVMBASE)/bin/clang++ -fopenmp
+
+            CPPFLAGS=-isystem "$(LLVMBASE)/include" -isysroot "$(XCBASE)"
+            LDFLAGS=-L"$(LLVMBASE)/lib" -L"$(GETTEXT)/lib" --sysroot="$(XCBASE)"
+
+            FC=$(GCCBASE)/bin/gfortran -fopenmp
+            F77=$(GCCBASE)/bin/gfortran -fopenmp
+            FLIBS=-L$(GCCBASE)/lib/gcc/9/ -lm
+
         run:
           |
             python -m pip install --upgrade pip setuptools wheel
