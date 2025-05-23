@@ -102,6 +102,7 @@ jobs:
             CXX="/opt/homebrew/opt/llvm/bin/clang++"
             LDFLAGS="-L/opt/homebrew/opt/llvm/lib"
             CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
+            MACOSX_DEPLOYMENT_TARGET="14.0"
 
           # Use uv for build frontend
           CIBW_BUILD_FRONTEND: build
