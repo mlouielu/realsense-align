@@ -7,6 +7,12 @@ on:
   release:
     types: [ published ]
   workflow_dispatch:
+    inputs:
+      logLevel:
+        description: "Log level"
+        options:
+          - info
+          - debug
 
 jobs:
   test:
