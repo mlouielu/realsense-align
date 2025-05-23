@@ -124,15 +124,14 @@ jobs:
 
     steps:
       - name: Download all wheels
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
+          pattern: wheels-*
           path: dist
+          merge-multiple: true
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_UPLOAD_TOKEN }}
-          packages_dir: dist/*/
 
   publish_to_testpypi:
     name: Publish to TestPyPI
