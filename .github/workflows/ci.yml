@@ -118,10 +118,14 @@ jobs:
           path: ./wheelhouse/*.whl
 
   upload:
+    name: Publish to PyPI
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && github.event.action == 'published'
+    environment: deploy
+    permissions:
+      id-token: write
 
+    if: github.event_name == 'release' && github.event.action == 'published'
     steps:
       - name: Download all wheels
         uses: actions/download-artifact@v4
