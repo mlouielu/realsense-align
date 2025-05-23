@@ -5,13 +5,16 @@ description = "Python realsense align"
 authors = [
     {name = "Louie Lu", email = "git@louie.lu"}
 ]
-license = "BSD-3-Clause-Clear"
+license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
     "pybind11>=2.10.4",
     "numpy>=1.22",
 ]
+
+[project.urls]
+github = "https://github.com/mlouielu/realsense-align"
 
 [dependency-groups]
 dev = [
@@ -39,17 +42,3 @@ name = "testpypi"
 url = "https://test.pypi.org/simple/"
 publish-url = "https://test.pypi.org/legacy/"
 explicit = true
-
-[tool.cibuildwheel]
-build = "cp39-* cp310-* cp311-* cp312-*"
-skip = "*-win32 *-musllinux* *-manylinux_i686"
-
-[tool.cibuildwheel.linux]
-before-all = [
-    "yum install -y gcc-c++",
-    "curl -LsSf https://astral.sh/uv/install.sh | sh",
-]
-build-frontend = "build"
-
-# Use manylinux2014 which supports newer glibc
-manylinux-x86_64-image = "manylinux2014"
