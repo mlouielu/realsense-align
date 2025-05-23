@@ -41,14 +41,20 @@ from pybind11.setup_helpers import Pybind11Extension, build_ext
 __version__ = "0.1.1"
 
 
+extra_compile_args = ["-O2"]
+extra_link_args = []
+
 if sys.platform == "darwin":
-    # macOS: Use libomp provided by Homebrew's llvm
-    extra_compile_args = ["-Xpreprocessor", "-fopenmp", "-O2"]
-    extra_link_args = ["-lomp"]
+    # macOS: Use libomp from Homebrew's llvm
+    extra_compile_args.extend(["-Xpreprocessor", "-fopenmp"])
+    extra_link_args.append("-lomp")
+elif sys.platform == "win32":
+    # Windows: Use MSVC's OpenMP support
+    extra_compile_args.append("/openmp")
 else:
-    # Linux/other Unix: Use libgomp provided by GCC
-    extra_compile_args = ["-fopenmp", "-O2"]
-    extra_link_args = ["-lgomp"]
+    # Linux/other Unix: Use libgomp from GCC
+    extra_compile_args.append("-fopenmp")
+    extra_link_args.append("-lgomp")
 
 
 ext_modules = [
