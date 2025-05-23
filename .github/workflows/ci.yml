@@ -143,7 +143,7 @@ jobs:
 
     runs-on: ubuntu-latest
     # This job will only run when you trigger it manually
-    if: github.event_name == 'workflow_dispatch'
+    if: contains(github.event.pull_request.labels.*.name, 'pypi-test')
 
     steps:
       - name: Download all wheels
