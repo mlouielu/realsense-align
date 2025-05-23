@@ -1,59 +1,134 @@
 name: ci
-
 on:
-  [push]
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [ published ]
 
 jobs:
-  build:
+  test:
+    name: Test on ${{ matrix.os }} with Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
-
-    runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }}
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.9', '3.10', '3.11', '3.12']
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          submodules: "true"
+          submodules: true
 
-      - if: ${{ matrix.os == 'macos-latest' }}
-        run:
-          |
-            brew install llvm libomp gcc gfortran
-            export PATH="/usr/local/opt/llvm/bin:$PATH"
-            export LDFLAGS="-L/usr/local/opt/llvm/lib"
-            export CPPFLAGS="-I/usr/local/opt/llvm/include"
-            export CC=/usr/local/opt/llvm/bin/clang
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
 
-      - name: Setup
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Add uv to PATH (Unix)
+        if: runner.os != 'Windows'
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Add uv to PATH (Windows)
+        if: runner.os == 'Windows'
+        run: echo "$env:USERPROFILE\.cargo\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Install macOS dependencies
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install llvm libomp gcc gfortran
+          export PATH="/usr/local/opt/llvm/bin:$PATH"
+          export LDFLAGS="-L/usr/local/opt/llvm/lib"
+          export CPPFLAGS="-I/usr/local/opt/llvm/include"
+          export CC=/usr/local/opt/llvm/bin/clang
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Run tests
+        run: uv run pytest -v
+
+      - name: Run linting (optional)
+        run: |
+          uv run ruff check . || true
+          uv run mypy . || true
+        continue-on-error: true
+
+  build:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: test  # Only build wheels after tests pass
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.16.5
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          |
-            XCBASE:=$(shell xcrun --show-sdk-path)
-            LLVMBASE:=$(shell brew --prefix llvm)
-            GCCBASE:=$(shell brew --prefix gcc)
-            GETTEXT:=$(shell brew --prefix gettext)
+          # Configure cibuildwheel to build wheels for Python 3.9-3.12
+          CIBW_BUILD: cp39-* cp310-* cp311-* cp312-*
+          CIBW_SKIP: "*-win32 *-musllinux* *-manylinux_i686"
 
-            CC=$(LLVMBASE)/bin/clang -fopenmp
-            CXX=$(LLVMBASE)/bin/clang++ -fopenmp
-            CXX11=$(LLVMBASE)/bin/clang++ -fopenmp
-            CXX14=$(LLVMBASE)/bin/clang++ -fopenmp
-            CXX17=$(LLVMBASE)/bin/clang++ -fopenmp
-            CXX1X=$(LLVMBASE)/bin/clang++ -fopenmp
+          # Linux specific settings
+          CIBW_BEFORE_ALL_LINUX: >
+            yum install -y gcc-c++ &&
+            curl -LsSf https://astral.sh/uv/install.sh | sh &&
+            source $HOME/.cargo/env
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
-            CPPFLAGS=-isystem "$(LLVMBASE)/include" -isysroot "$(XCBASE)"
-            LDFLAGS=-L"$(LLVMBASE)/lib" -L"$(GETTEXT)/lib" --sysroot="$(XCBASE)"
+          # macOS specific settings
+          CIBW_BEFORE_ALL_MACOS: >
+            brew install llvm libomp gcc gfortran &&
+            curl -LsSf https://astral.sh/uv/install.sh | sh &&
+            source $HOME/.cargo/env
+          CIBW_ENVIRONMENT_MACOS: >
+            PATH="/usr/local/opt/llvm/bin:$PATH"
+            LDFLAGS="-L/usr/local/opt/llvm/lib"
+            CPPFLAGS="-I/usr/local/opt/llvm/include"
+            CC="/usr/local/opt/llvm/bin/clang"
 
-            FC=$(GCCBASE)/bin/gfortran -fopenmp
-            F77=$(GCCBASE)/bin/gfortran -fopenmp
-            FLIBS=-L$(GCCBASE)/lib/gcc/9/ -lm
+          # Use uv for build frontend
+          CIBW_BUILD_FRONTEND: build
 
-        run:
-          |
-            python -m pip install --upgrade pip setuptools wheel
-            python -m pip install poetry
-            poetry install -vvv
-      - name: Build
-        run:
-          |
-            poetry build
+          # Test command to verify wheels work
+          CIBW_TEST_COMMAND: python -c "import {project_name}; print('Import successful')"
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels-${{ matrix.os }}
+          path: ./wheelhouse/*.whl
+
+  upload:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+
+    steps:
+      - name: Download all wheels
+        uses: actions/download-artifact@v3
+        with:
+          path: dist
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages_dir: dist/*/
