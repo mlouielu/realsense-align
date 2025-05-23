@@ -155,8 +155,3 @@ jobs:
 
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          # Use the new secret for TestPyPI
-          password: ${{ secrets.TESTPYPI_UPLOAD_TOKEN }}
-          # This URL points the action to the TestPyPI repository
-          repository_url: https://test.pypi.org/legacy/
