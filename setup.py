@@ -1,4 +1,3 @@
-
 #
 # Copyright (c) 2023 Louie Lu <louielu@cs.unc.edu>
 # All rights reserved.
@@ -33,6 +32,7 @@
 #
 
 import pathlib
+from setuptools import setup
 
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 
@@ -40,25 +40,21 @@ from pybind11.setup_helpers import Pybind11Extension, build_ext
 __version__ = "0.1.0"
 
 
-def build(setup_kwargs):
-    ext_modules = [
-        Pybind11Extension(
-            "realsense_align_ext",
-            ["ext/src/align.cpp"],
-            library=["openmp"],
-            extra_compile_args=["-fopenmp", "-O2"],
-            extra_link_args=["-lgomp"],
-            language="c++",
-            cxx_std=14,
-        ),
-    ]
+ext_modules = [
+    Pybind11Extension(
+        "realsense_align_ext",
+        ["ext/src/align.cpp"],
+        extra_compile_args=["-fopenmp", "-O2"],
+        extra_link_args=["-lgomp"],
+        language="c++",
+        cxx_std=14,
+    ),
+]
 
-    setup_kwargs.update(
-        {
-            "name": "realsense-align",
-            "version": __version__,
-            "ext_modules": ext_modules,
-            "cmdclass": {"build_ext": build_ext},
-            "zip_safe": False,
-        }
-    )
+setup(
+    name="realsense-align",
+    version=__version__,
+    ext_modules=ext_modules,
+    cmdclass={"build_ext": build_ext},
+    zip_safe=False,
+)
