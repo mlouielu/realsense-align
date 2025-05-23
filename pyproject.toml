@@ -13,15 +13,18 @@ dependencies = [
     "numpy>=1.22",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pytest>=7.4.0",
-    "matplotlib>=3.7.1",
-    "opencv-python>=4.7.0.72",
+    "cibuildwheel>=2.23.3",
+    "click>=8.1.8",
+    "matplotlib>=3.7.5",
+    "opencv-python>=4.11.0.86",
     "line-profiler>=4.0.3",
     "pre-commit>=3.3.3",
+    "zstandard>=0.23.0",
+    "pyqt6>=6.7.1",
 ]
-
 
 [build-system]
 requires = ["setuptools>=45", "wheel", "pybind11>=2.6.0"]
@@ -36,11 +39,6 @@ name = "testpypi"
 url = "https://test.pypi.org/simple/"
 publish-url = "https://test.pypi.org/legacy/"
 explicit = true
-
-[dependency-groups]
-dev = [
-    "cibuildwheel>=2.23.3",
-]
 
 [tool.cibuildwheel]
 build = "cp39-* cp310-* cp311-* cp312-*"

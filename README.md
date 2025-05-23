@@ -29,6 +29,24 @@ See [tests/test_align.py](tests/test_align.py) for detail.
 
 Run the test code by `poetry run pytest tests`.
 
+Example
+-------
+
+### mmwave-capture-std RGB+Depth Video Player
+
+Set up the virtual environment using uv
+
+```bash
+uv sync
+source .venv/bin/activate
+```
+
+Then, run the code to show the RGB+Depth video
+
+```bash
+python examples/play_depth_video.py path/to/capture_00001
+```
+
 Porting
 -------
 
