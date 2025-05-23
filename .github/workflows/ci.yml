@@ -88,7 +88,7 @@ jobs:
         env:
           # Configure cibuildwheel to build wheels for Python 3.9-3.12
           CIBW_BUILD: cp39-* cp310-* cp311-* cp312-*
-          CIBW_SKIP: "*-win32 *-musllinux* *-manylinux_i686"
+          CIBW_SKIP: "*-musllinux* *-manylinux_i686"
 
           # Linux specific settings
           CIBW_BEFORE_ALL_LINUX: >
@@ -103,9 +103,11 @@ jobs:
             curl -LsSf https://astral.sh/uv/install.sh | sh &&
             source $HOME/.cargo/env
           CIBW_ENVIRONMENT_MACOS: >
-            PATH="$(brew --prefix llvm)/bin:$PATH"
-            LDFLAGS="-L$(brew --prefix llvm)/lib"
-            CPPFLAGS="-I$(brew --prefix llvm)/include"
+            PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+            CC="/opt/homebrew/opt/llvm/bin/clang"
+            CXX="/opt/homebrew/opt/llvm/bin/clang++"
+            LDFLAGS="-L/opt/homebrew/opt/llvm/lib"
+            CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
 
           # Windows specific settings
           CIBW_BEFORE_ALL_WINDOWS: >
@@ -120,7 +122,7 @@ jobs:
           CIBW_TEST_COMMAND: python -c "import {project_name}; print('Import successful')"
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
