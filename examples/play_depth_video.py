@@ -30,9 +30,11 @@ def depths(cap_dir, colors, hw_dir="realsense"):
     hw_dir = cap_dir / hw_dir
 
     # Prepare configs
-    depth_config = json.load(open(hw_dir / "depth_config.json"))
+    with open(hw_dir / "depth_config.json") as depth_file:
+        depth_config = json.load(depth_file)
     depth_intr = depth_config["intrinsics"]
-    color_config = json.load(open(hw_dir / "color_config.json"))
+    with open(hw_dir / "color_config.json") as color_file:
+        color_config = json.load(color_file)
     color_intr = color_config["intrinsics"]
 
     depth_scale = depth_config["depth_units"]
