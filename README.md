@@ -11,15 +11,23 @@ and `rs:frame` infrastructure.
 Prerequisites
 -------------
 
-* Poetry
+* uv
 * OpenMP
 
 Build
 -----
 
 ```bash
-poetry install
-poetry build
+uv build
+```
+
+Install
+-------
+
+### Install from PyPI
+
+```bash
+python -m pip install realsense-align
 ```
 
 How to use
@@ -27,7 +35,7 @@ How to use
 
 See [tests/test_align.py](tests/test_align.py) for detail.
 
-Run the test code by `poetry run pytest tests`.
+Run the test code by `pytest tests`.
 
 Example
 -------
