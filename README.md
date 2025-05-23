@@ -3,6 +3,7 @@ realsense-align
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
 [![License: BSD 3-Clause-Clear](https://img.shields.io/badge/License-BSD%203--Clause--Clear-green.svg)](https://spdx.org/licenses/BSD-3-Clause-Clear.html)
+![PyPI - Version](https://img.shields.io/pypi/v/realsense-align)
 
 Porting `librealsense` C++ align code to Python C++ extension. Align
 depth and color image from `numpy` array without `librealsense` SDK
@@ -55,7 +56,7 @@ Then, run the code to show the RGB+Depth video
 python examples/play_depth_video.py path/to/capture_00001
 ```
 
-Porting
+[IPorting
 -------
 
 * [x] struct Intrinsic
