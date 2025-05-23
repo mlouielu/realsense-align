@@ -91,29 +91,17 @@ jobs:
           CIBW_SKIP: "*-musllinux* *-manylinux_i686"
 
           # Linux specific settings
-          CIBW_BEFORE_ALL_LINUX: >
-            yum install -y gcc-c++ &&
-            curl -LsSf https://astral.sh/uv/install.sh | sh &&
-            source $HOME/.cargo/env
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
           # macOS specific settings
           CIBW_BEFORE_ALL_MACOS: >
-            brew install llvm libomp gcc gfortran &&
-            curl -LsSf https://astral.sh/uv/install.sh | sh &&
-            source $HOME/.cargo/env
+            brew install llvm
           CIBW_ENVIRONMENT_MACOS: >
             PATH="/opt/homebrew/opt/llvm/bin:$PATH"
             CC="/opt/homebrew/opt/llvm/bin/clang"
             CXX="/opt/homebrew/opt/llvm/bin/clang++"
             LDFLAGS="-L/opt/homebrew/opt/llvm/lib"
             CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
-
-          # Windows specific settings
-          CIBW_BEFORE_ALL_WINDOWS: >
-            powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-          CIBW_ENVIRONMENT_WINDOWS: >
-            PATH="$PATH;$USERPROFILE\\.cargo\\bin"
 
           # Use uv for build frontend
           CIBW_BUILD_FRONTEND: build
