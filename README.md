@@ -34,7 +34,7 @@ Example
 
 ### mmwave-capture-std RGB+Depth Video Player
 
-Get the virtualenv by uv
+Set up the virtual environment using uv
 
 ```bash
 uv sync
