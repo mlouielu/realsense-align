@@ -5,7 +5,7 @@ description = "Python realsense align"
 authors = [
     {name = "Louie Lu", email = "git@louie.lu"}
 ]
-license = "BSD-3-Clause-Clear"
+license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
