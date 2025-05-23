@@ -136,7 +136,11 @@ jobs:
 
   publish_to_testpypi:
     name: Publish to TestPyPI
-    needs: build_and_test_wheels
+    needs: build
+    environment: deploy
+    permissions:
+      id-token: write
+
     runs-on: ubuntu-latest
     # This job will only run when you trigger it manually
     if: github.event_name == 'workflow_dispatch'
