@@ -13,6 +13,9 @@ dependencies = [
     "numpy>=1.22",
 ]
 
+[project.urls]
+github = "https://github.com/mlouielu/realsense-align"
+
 [dependency-groups]
 dev = [
     "pytest>=7.4.0",
