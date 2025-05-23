@@ -31,4 +31,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+from importlib import metadata
+
+
+try:
+    __version__ = metadata.version("realsense-align")
+except metadata.PackageNotFoundError:
+    __version__ = "0.0.0-dev"
+
+
 from realsense_align_ext import *  # type: ignore
