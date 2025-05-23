@@ -6,6 +6,7 @@ on:
     branches: [ main, master ]
   release:
     types: [ published ]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -132,3 +133,26 @@ jobs:
         with:
           password: ${{ secrets.PYPI_UPLOAD_TOKEN }}
           packages_dir: dist/*/
+
+  publish_to_testpypi:
+    name: Publish to TestPyPI
+    needs: build_and_test_wheels
+    runs-on: ubuntu-latest
+    # This job will only run when you trigger it manually
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # Use the new secret for TestPyPI
+          password: ${{ secrets.TESTPYPI_UPLOAD_TOKEN }}
+          # This URL points the action to the TestPyPI repository
+          repository_url: https://test.pypi.org/legacy/
