@@ -41,11 +41,12 @@ jobs:
       - name: Install macOS dependencies
         if: matrix.os == 'macos-latest'
         run: |
-          brew install llvm libomp gcc gfortran
-          export PATH="/usr/local/opt/llvm/bin:$PATH"
-          export LDFLAGS="-L/usr/local/opt/llvm/lib"
-          export CPPFLAGS="-I/usr/local/opt/llvm/include"
-          export CC=/usr/local/opt/llvm/bin/clang
+          brew install llvm
+          echo "CC=$(brew --prefix llvm)/bin/clang" >> $GITHUB_ENV
+          echo "CXX=$(brew --prefix llvm)/bin/clang++" >> $GITHUB_ENV
+          echo "LDFLAGS=-L$(brew --prefix llvm)/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I$(brew --prefix llvm)/include" >> $GITHUB_ENV
+          echo "PATH=$(brew --prefix llvm)/bin:$PATH" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: |
@@ -102,10 +103,15 @@ jobs:
             curl -LsSf https://astral.sh/uv/install.sh | sh &&
             source $HOME/.cargo/env
           CIBW_ENVIRONMENT_MACOS: >
-            PATH="/usr/local/opt/llvm/bin:$PATH"
-            LDFLAGS="-L/usr/local/opt/llvm/lib"
-            CPPFLAGS="-I/usr/local/opt/llvm/include"
-            CC="/usr/local/opt/llvm/bin/clang"
+            PATH="$(brew --prefix llvm)/bin:$PATH"
+            LDFLAGS="-L$(brew --prefix llvm)/lib"
+            CPPFLAGS="-I$(brew --prefix llvm)/include"
+
+          # Windows specific settings
+          CIBW_BEFORE_ALL_WINDOWS: >
+            powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+          CIBW_ENVIRONMENT_WINDOWS: >
+            PATH="$PATH;$USERPROFILE\\.cargo\\bin"
 
           # Use uv for build frontend
           CIBW_BUILD_FRONTEND: build

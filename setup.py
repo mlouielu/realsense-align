@@ -32,6 +32,7 @@
 #
 
 import pathlib
+import sys
 from setuptools import setup
 
 from pybind11.setup_helpers import Pybind11Extension, build_ext
@@ -40,12 +41,22 @@ from pybind11.setup_helpers import Pybind11Extension, build_ext
 __version__ = "0.1.1"
 
 
+if sys.platform == "darwin":
+    # macOS: Use libomp provided by Homebrew's llvm
+    extra_compile_args = ["-Xpreprocessor", "-fopenmp", "-O2"]
+    extra_link_args = ["-lomp"]
+else:
+    # Linux/other Unix: Use libgomp provided by GCC
+    extra_compile_args = ["-fopenmp", "-O2"]
+    extra_link_args = ["-lgomp"]
+
+
 ext_modules = [
     Pybind11Extension(
         "realsense_align_ext",
         ["ext/src/align.cpp"],
-        extra_compile_args=["-fopenmp", "-O2"],
-        extra_link_args=["-lgomp"],
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
         language="c++",
         cxx_std=14,
     ),
