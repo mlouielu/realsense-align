@@ -81,7 +81,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.16.5
+        run: python -m pip install cibuildwheel==2.19.1
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
@@ -107,7 +107,7 @@ jobs:
           CIBW_BUILD_FRONTEND: build
 
           # Test command to verify wheels work
-          CIBW_TEST_COMMAND: python -c "import {project_name}; print('Import successful')"
+          CIBW_TEST_COMMAND: python -c "import {package}; print('Import successful')"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
