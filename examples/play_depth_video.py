@@ -82,7 +82,7 @@ class InteractiveViewer:
         self.depths = depths
         self.aligned_depths = aligned_depths
         self.num_frames = min(len(colors), len(depths), len(aligned_depths))
-        self.current_frame = 40  # Starting frame
+        self.current_frame = min(40, self.num_frames - 1)  # Starting frame clamped to valid range
 
         # Create figure with subplots
         self.fig, self.axes = plt.subplots(2, 2, figsize=(15, 12))
