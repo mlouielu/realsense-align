@@ -39,17 +39,3 @@ name = "testpypi"
 url = "https://test.pypi.org/simple/"
 publish-url = "https://test.pypi.org/legacy/"
 explicit = true
-
-[tool.cibuildwheel]
-build = "cp39-* cp310-* cp311-* cp312-*"
-skip = "*-win32 *-musllinux* *-manylinux_i686"
-
-[tool.cibuildwheel.linux]
-before-all = [
-    "yum install -y gcc-c++",
-    "curl -LsSf https://astral.sh/uv/install.sh | sh",
-]
-build-frontend = "build"
-
-# Use manylinux2014 which supports newer glibc
-manylinux-x86_64-image = "manylinux2014"
