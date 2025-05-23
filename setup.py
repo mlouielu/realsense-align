@@ -38,9 +38,6 @@ from setuptools import setup
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 
 
-__version__ = "0.1.2"
-
-
 extra_compile_args = ["-O2"]
 extra_link_args = []
 
@@ -70,7 +67,6 @@ ext_modules = [
 
 setup(
     name="realsense-align",
-    version=__version__,
     ext_modules=ext_modules,
     cmdclass={"build_ext": build_ext},
     zip_safe=False,
