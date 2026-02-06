@@ -40,9 +40,11 @@
 // Copyright(c) 2017 Intel Corporation. All Rights Reserved.
 //
 
+#include <array>
 #include <omp.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
@@ -70,6 +72,23 @@ struct Intrinsics {
     double ppx, ppy;
 };
 
+struct Extrinsics {
+    // Default: identity rotation, zero translation
+    Extrinsics()
+        : rotation{1, 0, 0, 0, 1, 0, 0, 0, 1}, translation{0, 0, 0}
+    {
+    }
+
+    Extrinsics(std::array<float, 9> rotation,
+               std::array<float, 3> translation)
+        : rotation(rotation), translation(translation)
+    {
+    }
+
+    std::array<float, 9> rotation;     // Column-major 3x3 rotation matrix
+    std::array<float, 3> translation;  // Translation vector, in meters
+};
+
 void rs2_deproject_pixel_to_point(float point[3],
                                   const struct Intrinsics *intrin,
                                   const float pixel[2],
@@ -94,8 +113,27 @@ void rs2_project_point_to_pixel(float pixel[2],
     pixel[1] = y * intrin->fy + intrin->ppy;
 }
 
+void rs2_transform_point_to_point(float to_point[3],
+                                   const struct Extrinsics *extrin,
+                                   const float from_point[3])
+{
+    to_point[0] = extrin->rotation[0] * from_point[0] +
+                  extrin->rotation[3] * from_point[1] +
+                  extrin->rotation[6] * from_point[2] +
+                  extrin->translation[0];
+    to_point[1] = extrin->rotation[1] * from_point[0] +
+                  extrin->rotation[4] * from_point[1] +
+                  extrin->rotation[7] * from_point[2] +
+                  extrin->translation[1];
+    to_point[2] = extrin->rotation[2] * from_point[0] +
+                  extrin->rotation[5] * from_point[1] +
+                  extrin->rotation[8] * from_point[2] +
+                  extrin->translation[2];
+}
+
 template <class GET_DEPTH, class TRANSFER_PIXEL>
 void align_images(const struct Intrinsics &depth_intrin,
+                  const struct Extrinsics &depth_to_other,
                   const struct Intrinsics &other_intrin,
                   GET_DEPTH get_depth,
                   TRANSFER_PIXEL transfer_pixel)
@@ -109,33 +147,35 @@ void align_images(const struct Intrinsics &depth_intrin,
             // Skip over depth pixels with the value of zero, we have no depth data so we will not write anything into our aligned images
             if (float depth = get_depth(depth_pixel_index)) {
                 // Map the top-left corner of the depth pixel onto the other image
-                float depth_pixel[2] = { depth_x - 0.5f, depth_y - 0.5f },
+                float depth_pixel[2] = {depth_x - 0.5f, depth_y - 0.5f},
                       depth_point[3], other_point[3], other_pixel[2];
                 rs2_deproject_pixel_to_point(depth_point, &depth_intrin,
                                              depth_pixel, depth);
-
-                // We don't have translation for the depth camera, so we just use the depth point
-                other_point[0] = depth_point[0];
-                other_point[1] = depth_point[1];
-                other_point[2] = depth_point[2];
+                rs2_transform_point_to_point(other_point,
+                                              &depth_to_other,
+                                              depth_point);
                 rs2_project_point_to_pixel(other_pixel, &other_intrin,
                                            other_point);
 
-                const int other_x0 = static_cast<int>(other_pixel[0] + 0.5f);
-                const int other_y0 = static_cast<int>(other_pixel[1] + 0.5f);
+                const int other_x0 =
+                    static_cast<int>(other_pixel[0] + 0.5f);
+                const int other_y0 =
+                    static_cast<int>(other_pixel[1] + 0.5f);
 
                 // Map the bottom-right corner of the depth pixel onto the other image
                 depth_pixel[0] = depth_x + 0.5f;
                 depth_pixel[1] = depth_y + 0.5f;
                 rs2_deproject_pixel_to_point(depth_point, &depth_intrin,
                                              depth_pixel, depth);
-                other_point[0] = depth_point[0];
-                other_point[1] = depth_point[1];
-                other_point[2] = depth_point[2];
+                rs2_transform_point_to_point(other_point,
+                                              &depth_to_other,
+                                              depth_point);
                 rs2_project_point_to_pixel(other_pixel, &other_intrin,
                                            other_point);
-                const int other_x1 = static_cast<int>(other_pixel[0] + 0.5f);
-                const int other_y1 = static_cast<int>(other_pixel[1] + 0.5f);
+                const int other_x1 =
+                    static_cast<int>(other_pixel[0] + 0.5f);
+                const int other_y1 =
+                    static_cast<int>(other_pixel[1] + 0.5f);
 
                 if (other_x0 < 0 || other_y0 < 0 ||
                     other_x1 >= other_intrin.width ||
@@ -156,18 +196,19 @@ void align_images(const struct Intrinsics &depth_intrin,
 
 
 
-py::array_t<uint16_t> align_z_to_other(py::array_t<int16_t> depth,
-                                       py::array_t<uint8_t> color,
-                                       const struct Intrinsics &depth_intrin,
-                                       const struct Intrinsics &color_intrin,
-                                       double z_scale)
+py::array_t<uint16_t> align_z_to_other(
+    py::array_t<int16_t> depth,
+    py::array_t<uint8_t> color,
+    const struct Intrinsics &depth_intrin,
+    const struct Intrinsics &color_intrin,
+    double z_scale,
+    const struct Extrinsics &depth_to_other)
 {
     py::array_t<uint16_t> out_z_arr(
-        { color_intrin.height, color_intrin.width });
+        {color_intrin.height, color_intrin.width});
     py::buffer_info out_z_info = out_z_arr.request();
     py::buffer_info depth_info = depth.request();
     py::buffer_info color_info = color.request();
-
 
     if (depth_info.ndim != 2 || color_info.ndim != 3) {
         throw std::runtime_error("Number of dimensions must be two");
@@ -175,18 +216,18 @@ py::array_t<uint16_t> align_z_to_other(py::array_t<int16_t> depth,
 
     out_z_arr[py::make_tuple(py::ellipsis())] = 0;
     auto *z_pixels = reinterpret_cast<const uint16_t *>(depth_info.ptr);
-    auto *out_z = (uint16_t *) (out_z_info.ptr);
+    auto *out_z = (uint16_t *)(out_z_info.ptr);
 
     align_images(
-        depth_intrin, color_intrin,
+        depth_intrin, depth_to_other, color_intrin,
         [z_pixels, z_scale](int z_pixel_index) {
             return z_scale * z_pixels[z_pixel_index];
         },
         [out_z, z_pixels](int z_pixel_index, int other_pixel_index) {
             out_z[other_pixel_index] =
                 out_z[other_pixel_index]
-                    ? std::min((int) out_z[other_pixel_index],
-                               (int) z_pixels[z_pixel_index])
+                    ? std::min((int)out_z[other_pixel_index],
+                               (int)z_pixels[z_pixel_index])
                     : z_pixels[z_pixel_index];
         });
 
@@ -198,7 +239,14 @@ py::array_t<uint16_t> align_z_to_other(py::array_t<int16_t> depth,
 PYBIND11_MODULE(realsense_align_ext, m)
 {
     m.doc() = "Realsense align";
-    m.def("align_z_to_other", &align_z_to_other, "Align depth to other stream");
+
+    py::class_<Extrinsics>(m, "Extrinsics")
+        .def(py::init<>())
+        .def(py::init<std::array<float, 9>, std::array<float, 3>>(),
+             py::arg("rotation"), py::arg("translation"))
+        .def_readwrite("rotation", &Extrinsics::rotation)
+        .def_readwrite("translation", &Extrinsics::translation);
+
     py::class_<Intrinsics>(m, "Intrinsics")
         .def(py::init<const std::string &, double, double, double, double,
                       double, double>())
@@ -209,4 +257,10 @@ PYBIND11_MODULE(realsense_align_ext, m)
         .def_readwrite("fy", &Intrinsics::fy)
         .def_readwrite("ppx", &Intrinsics::ppx)
         .def_readwrite("ppy", &Intrinsics::ppy);
+
+    m.def("align_z_to_other", &align_z_to_other,
+          "Align depth to other stream", py::arg("depth"),
+          py::arg("color"), py::arg("depth_intrin"),
+          py::arg("color_intrin"), py::arg("z_scale"),
+          py::arg("depth_to_other") = Extrinsics());
 }

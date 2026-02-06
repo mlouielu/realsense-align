@@ -299,6 +299,104 @@ def test_align_different_resolutions(width, height):
     ), f"Output shape should match input {height}x{width}"
 
 
+def test_extrinsics_default_identity():
+    """Test that default Extrinsics is identity (backward compat)"""
+    ext = realsense_align.Extrinsics()
+    assert list(ext.rotation) == [1, 0, 0, 0, 1, 0, 0, 0, 1]
+    assert list(ext.translation) == [0, 0, 0]
+
+
+def test_extrinsics_custom():
+    """Test constructing Extrinsics with custom values"""
+    rot = [1, 0, 0, 0, 1, 0, 0, 0, 1]
+    trans = [0.01, 0.02, 0.03]
+    ext = realsense_align.Extrinsics(rotation=rot, translation=trans)
+    np.testing.assert_allclose(list(ext.rotation), rot)
+    np.testing.assert_allclose(list(ext.translation), trans, rtol=1e-6)
+
+
+def test_extrinsics_identity_matches_no_extrinsics():
+    """Passing identity extrinsics should give same result as default"""
+    config = TestDataConfig()
+    depth = TestDataFactory.create_synthetic_depth(config.width, config.height)
+    color = TestDataFactory.create_synthetic_color(config.width, config.height)
+    intr = TestDataFactory.create_intrinsics(config)
+
+    aligned_default = realsense_align.align_z_to_other(
+        depth, color, intr, intr, config.depth_scale
+    )
+    identity = realsense_align.Extrinsics()
+    aligned_identity = realsense_align.align_z_to_other(
+        depth, color, intr, intr, config.depth_scale, depth_to_other=identity
+    )
+
+    np.testing.assert_array_equal(aligned_default, aligned_identity)
+
+
+def test_extrinsics_translation_shifts_output():
+    """A translation in extrinsics should shift the aligned depth"""
+    config = TestDataConfig(width=640, height=480)
+    depth = TestDataFactory.create_synthetic_depth(config.width, config.height)
+    color = TestDataFactory.create_synthetic_color(config.width, config.height)
+    intr = TestDataFactory.create_intrinsics(config)
+
+    aligned_identity = realsense_align.align_z_to_other(
+        depth, color, intr, intr, config.depth_scale
+    )
+
+    # Apply a small X translation (shifts projected pixels horizontally)
+    ext = realsense_align.Extrinsics(
+        rotation=[1, 0, 0, 0, 1, 0, 0, 0, 1],
+        translation=[0.05, 0, 0],
+    )
+    aligned_translated = realsense_align.align_z_to_other(
+        depth, color, intr, intr, config.depth_scale, depth_to_other=ext
+    )
+
+    # The outputs should differ due to the translation
+    assert not np.array_equal(
+        aligned_identity, aligned_translated
+    ), "Translation should change the aligned output"
+
+    # Both should still have non-zero depth values
+    assert np.any(aligned_translated > 0), "Translated output should have depth data"
+
+
+def test_extrinsics_rotation_changes_output():
+    """A non-identity rotation should change the aligned depth"""
+    config = TestDataConfig(width=640, height=480)
+    depth = TestDataFactory.create_synthetic_depth(config.width, config.height)
+    color = TestDataFactory.create_synthetic_color(config.width, config.height)
+    intr = TestDataFactory.create_intrinsics(config)
+
+    aligned_identity = realsense_align.align_z_to_other(
+        depth, color, intr, intr, config.depth_scale
+    )
+
+    # Small rotation around Y axis (~1 degree)
+    import math
+
+    angle = math.radians(1.0)
+    cos_a = math.cos(angle)
+    sin_a = math.sin(angle)
+    # Column-major rotation around Y:
+    # [ cos  0  sin]
+    # [  0   1   0 ]
+    # [-sin  0  cos]
+    ext = realsense_align.Extrinsics(
+        rotation=[cos_a, 0, -sin_a, 0, 1, 0, sin_a, 0, cos_a],
+        translation=[0, 0, 0],
+    )
+    aligned_rotated = realsense_align.align_z_to_other(
+        depth, color, intr, intr, config.depth_scale, depth_to_other=ext
+    )
+
+    assert not np.array_equal(
+        aligned_identity, aligned_rotated
+    ), "Rotation should change the aligned output"
+    assert np.any(aligned_rotated > 0), "Rotated output should have depth data"
+
+
 # Utility function to save test data (for creating new test datasets)
 def create_test_data_file():
     """Utility to create/update test data file with synthetic data"""
