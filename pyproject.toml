@@ -23,7 +23,6 @@ dev = [
     "click>=8.1.8",
     "matplotlib>=3.7.5",
     "opencv-python>=4.11.0.86",
-    "line-profiler>=4.0.3",
     "pre-commit>=3.3.3",
     "zstandard>=0.23.0",
     "pyqt6>=6.7.1",
